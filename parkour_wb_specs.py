@@ -58,6 +58,24 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="0" y1="1" z1="5" x2="0" y2="1" z2="8" type="obsidian"/>
                     <DrawCuboid x1="0" y1="1" z1="9" x2="0" y2="1" z2="9" type="gold_block"/>
                 """)
+            ],
+            "bridge_turn_left_hole": [
+                handlers.DrawingDecorator("""
+                    <DrawCuboid x1="4" y1="1" z1="10" x2="4" y2="1" z2="10" type="gold_block"/>
+                    <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="2" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="4" x2="0" y2="1" z2="5" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="5" x2="4" y2="1" z2="5" type="obsidian"/>
+                    <DrawCuboid x1="4" y1="1" z1="5" x2="4" y2="1" z2="8" type="obsidian"/>
+                """)
+            ],
+            "bridge_turn_right_hole": [
+                handlers.DrawingDecorator("""
+                    <DrawCuboid x1="-4" y1="1" z1="10" x2="-4" y2="1" z2="10" type="gold_block"/>
+                    <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="2" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="4" x2="0" y2="1" z2="5" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="5" x2="-4" y2="1" z2="5" type="obsidian"/>
+                    <DrawCuboid x1="-4" y1="1" z1="5" x2="-4" y2="1" z2="8" type="obsidian"/>
+                """)
             ]
         }
 
@@ -71,7 +89,7 @@ class PKWB(SimpleEmbodimentEnvSpec):
         if self.manual_reset:
             return [handlers.FlatWorldGenerator(generatorString="1;0;1")] + self.maps[self.map]
         else:
-            return [handlers.FlatWorldGenerator(generatorString="1;20;1")] + self.maps[self.map]
+            return [handlers.FlatWorldGenerator(generatorString="1;0;1")] + self.maps[self.map]
 
     def create_agent_start(self) -> List[Handler]:
         return [
@@ -82,11 +100,10 @@ class PKWB(SimpleEmbodimentEnvSpec):
         return [
             # reward the agent for touching a gold block (but only once)
             handlers.RewardForTouchingBlockType([
-                {'type':'gold_block', 'behaviour':'onceOnly', 'reward':'50'},
-                {'type':'glass', 'behaviour':'onceOnly', 'reward':'-100'},
+                {'type':'gold_block', 'behaviour':'onceOnly', 'reward':'100'}
             ]),
             # also reward on mission end
-            handlers.RewardForMissionEnd(50)
+            handlers.RewardForMissionEnd(100)
         ]
 
     def create_agent_handlers(self) -> List[Handler]:
@@ -113,7 +130,7 @@ class PKWB(SimpleEmbodimentEnvSpec):
     def create_server_initial_conditions(self) -> List[Handler]:
         return [
             # Sets time to morning and stops passing of time
-            handlers.TimeInitialCondition(False, 23000)
+            handlers.TimeInitialCondition(False, 6000)
         ]
 
     # see API reference for use cases of these first two functions
