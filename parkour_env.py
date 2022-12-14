@@ -76,15 +76,17 @@ class parkour_env(gym.Env):
         if (reward <= 0 and done) or pos[1] < 2:
             reward -= 50
 
-        if pos[1] < 2:
-            if self.fast:
-                self.env.set_next_chat_message("/tp @a 0 2 0")
-            else:
-                done = True
-
         dis = np.linalg.norm(pos - self.destination)
         reward -= dis
         reward -= 0.001 * self.t
+        
+        if pos[1] < 2:
+            if self.fast:
+                self.yaw = 0
+                self.t = 0
+                self.env.set_next_chat_message("/tp @a 0 2 0")
+            else:
+                done = True
 
         return (obs, reward, done, info)
 
