@@ -11,7 +11,7 @@ _ActionType = int
 _ObservationType = map
 
 class parkour_env(gym.Env):
-    def __init__(self, resolution=(64, 64), map="bridge", debug=False) -> None:
+    def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False) -> None:
         super().__init__()
         if map in PKWB_MAP.keys():
             self.map = map
@@ -19,9 +19,10 @@ class parkour_env(gym.Env):
             self.map = PKWB_MAP.keys()[0]
         self.debug = debug
         self.image_shape = resolution + (3,)
+        self.fast = fast
 
         env_name = 'PKWB_%04d-v0' % (random.randint(0, 9999))
-        abs_PK = PKWB(name=env_name, resolution=(64,64), map=self.map)
+        abs_PK = PKWB(name=env_name, resolution=resolution, map=self.map, manual_reset=self.fast)
         abs_PK.register()
         self.env = gym.make(env_name)
         self.n_actions = len(ACTION)
@@ -34,13 +35,19 @@ class parkour_env(gym.Env):
 
     def step(self, action: _ActionType) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
         action_int = action + 1
-        action_space = self.env.action_space.noop()
+        action_space = {
+            'forward': 0,
+            'jump': 0,
+            'sprint': 0,
+            'camera': [0, 0]
+        }
 
         if action_int == ACTION.forward.value:
             action_space['forward'] = 1
         elif action_int == ACTION.jump.value:
             action_space['jump'] = 1
         elif action_int == ACTION.sprint.value:
+            action_space['forward'] = 1
             action_space['sprint'] = 1
         elif action_int == ACTION.camera_left.value:
             action_space['camera'][1] = 10
@@ -66,11 +73,14 @@ class parkour_env(gym.Env):
         self.t += 1
         pos = self.extract_pos(obs)
 
-        dead = False
         if (reward <= 0 and done) or pos[1] < 2:
             reward -= 50
-            dead = True
-            done = True
+
+        if pos[1] < 2:
+            if self.fast:
+                self.env.set_next_chat_message("/tp @a 0 0 0")
+            else:
+                done = True
 
         dis = np.linalg.norm(pos - self.destination)
         reward -= dis
@@ -87,7 +97,7 @@ class parkour_env(gym.Env):
             return self.env.observation_space.sample()
 
     def render(self, mode='human') -> Any:
-        if not self.debug:
+        if not self.debug and not self.fast:
             return self.env.render(mode)
         else:
             return
