@@ -25,6 +25,7 @@ class parkour_env(gym.Env):
         abs_PK = PKWB(name=env_name, resolution=resolution, map=self.map, manual_reset=self.fast)
         abs_PK.register()
         self.env = gym.make(env_name)
+        self.env_alive = False
         self.n_actions = len(ACTION)
         self.action_space = spaces.Discrete(self.n_actions)
         self.observation_space = self.env.observation_space
@@ -73,6 +74,9 @@ class parkour_env(gym.Env):
         self.t += 1
         pos = self.extract_pos(obs)
 
+        if done:
+            self.env_alive = False
+
         if (reward <= 0 and done) or pos[1] < 2:
             reward -= 50
 
@@ -81,12 +85,8 @@ class parkour_env(gym.Env):
         reward -= 0.001 * self.t
         
         if pos[1] < 2:
-            if self.fast:
-                self.yaw = 0
-                self.t = 0
-                self.env.set_next_chat_message("/tp @a 0 2 0 0 0")
-            else:
-                done = True
+            done = True
+            self.env.step({'chat': '/tp @a 0 2 0 0 0'})
 
         return (obs, reward, done, info)
 
@@ -94,7 +94,12 @@ class parkour_env(gym.Env):
         self.yaw = 0
         self.t = 0
         if not self.debug:
-            return self.env.reset()
+            if self.env_alive and self.fast:
+                obs, _, _, _ = self.env.step({'chat': '/tp @a 0 2 0 0 0'})
+                return obs
+            else:
+                self.env_alive = True
+                return self.env.reset()
         else:
             return self.env.observation_space.sample()
 

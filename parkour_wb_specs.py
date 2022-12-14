@@ -7,7 +7,7 @@ PKWB_DOC = """
 In PKWB, player parkours.
 """
 
-PKWB_LENGTH = 8000
+PKWB_LENGTH = 1000000
 PKWB_MAP = {
     "bridge": (0, 1, 5),
     "bridge_turn_left": (4, 1, 9), 
