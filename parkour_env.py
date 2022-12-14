@@ -4,6 +4,7 @@ from gym import spaces
 from parkour_wb_specs import PKWB
 import random
 from typing import Tuple, Dict, Any
+import numpy as np
 
 ACTION = Enum('Actions', ['forward', 'jump', 'sprint', 'camera_left', 'camera_right', 'camera_down', 'camera_up'])
 _ActionType = int
@@ -39,9 +40,9 @@ class parkour_env(gym.Env):
         elif action_int == ACTION.sprint.value:
             action_space['sprint'] = 1
         elif action_int == ACTION.camera_left.value:
-            action_space['camera'][1] -= 30
+            action_space['camera'][1] = 10
         elif action_int == ACTION.camera_right.value:
-            action_space['camera'][1] += 30
+            action_space['camera'][1] = 10
         elif action_int == ACTION.camera_down.value:
             action_space['camera'][0] = -30 - self.yaw
             self.yaw = -30
@@ -57,7 +58,7 @@ class parkour_env(gym.Env):
             obs['location_stats']['xpos'] = random.random() * 5
             obs['location_stats']['zpos'] = random.random() * 5
             reward = 0
-            done = False
+            done = np.random.choice(np.arange(0, 2), p=[0.99, 0.01])
             info = {}
         self.t += 1
 
