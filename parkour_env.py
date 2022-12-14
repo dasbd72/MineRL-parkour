@@ -84,7 +84,7 @@ class parkour_env(gym.Env):
             if self.fast:
                 self.yaw = 0
                 self.t = 0
-                self.env.set_next_chat_message("/tp @a 0 2 0")
+                self.env.set_next_chat_message("/tp @a 0 2 0 0 0")
             else:
                 done = True
 
