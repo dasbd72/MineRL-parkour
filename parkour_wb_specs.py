@@ -96,9 +96,9 @@ class PKWB(SimpleEmbodimentEnvSpec):
 
     def create_server_world_generators(self) -> List[Handler]:
         if self.manual_reset:
-            return [handlers.FlatWorldGenerator(generatorString="1;;1")] + self.maps[self.map]
+            return [handlers.FlatWorldGenerator(generatorString="1;0;1")] + self.maps[self.map]
         else:
-            return [handlers.FlatWorldGenerator(generatorString="1;;1")] + self.maps[self.map]
+            return [handlers.FlatWorldGenerator(generatorString="1;0;1")] + self.maps[self.map]
 
     def create_agent_start(self) -> List[Handler]:
         return [
