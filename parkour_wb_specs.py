@@ -8,6 +8,15 @@ In PKWB, player parkours.
 """
 
 PKWB_LENGTH = 8000
+PKWB_MAP = {
+    "bridge": (0, 1, 5),
+    "bridge_turn_left": (4, 1, 9), 
+    "bridge_turn_right": (-4, 1, 9), 
+    "bridge_lift": (0, 3, 7), 
+    "bridge_hole": (0, 1, 9), 
+    "bridge_turn_left_hole": (4, 1, 10), 
+    "bridge_turn_right_hole": (-4, 1, 10)
+}
 
 class PKWB(SimpleEmbodimentEnvSpec):
     def __init__(self, resolution=(64,64), map="bridge", manual_reset=False, *args, **kwargs):
@@ -87,9 +96,9 @@ class PKWB(SimpleEmbodimentEnvSpec):
 
     def create_server_world_generators(self) -> List[Handler]:
         if self.manual_reset:
-            return [handlers.FlatWorldGenerator(generatorString="1;251;1")] + self.maps[self.map]
+            return [handlers.FlatWorldGenerator(generatorString="1;;1")] + self.maps[self.map]
         else:
-            return [handlers.FlatWorldGenerator(generatorString="1;251;1")] + self.maps[self.map]
+            return [handlers.FlatWorldGenerator(generatorString="1;;1")] + self.maps[self.map]
 
     def create_agent_start(self) -> List[Handler]:
         return [

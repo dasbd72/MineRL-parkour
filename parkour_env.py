@@ -1,7 +1,7 @@
 from enum import Enum
 import gym
 from gym import spaces
-from parkour_wb_specs import PKWB
+from parkour_wb_specs import PKWB, PKWB_MAP
 import random
 from typing import Tuple, Dict, Any
 import numpy as np
@@ -13,18 +13,21 @@ _ObservationType = map
 class parkour_env(gym.Env):
     def __init__(self, resolution=(64, 64), map="bridge", debug=False) -> None:
         super().__init__()
-        env_name = 'PKWB_%04d-v0' % (random.randint(0, 9999))
-        abs_PK = PKWB(name=env_name, resolution=(64,64), map=map)
-        abs_PK.register()
-
-        self.map = map
+        if map in PKWB_MAP.keys():
+            self.map = map
+        else:
+            self.map = PKWB_MAP.keys()[0]
         self.debug = debug
         self.image_shape = resolution + (3,)
 
+        env_name = 'PKWB_%04d-v0' % (random.randint(0, 9999))
+        abs_PK = PKWB(name=env_name, resolution=(64,64), map=self.map)
+        abs_PK.register()
         self.env = gym.make(env_name)
         self.n_actions = len(ACTION)
         self.action_space = spaces.Discrete(self.n_actions)
         self.observation_space = self.env.observation_space
+        self.destination = np.array(PKWB_MAP[self.map])
         
         self.yaw = 0
         self.t = 0
@@ -61,18 +64,16 @@ class parkour_env(gym.Env):
             done = np.random.choice(np.arange(0, 2), p=[0.99, 0.01])
             info = {}
         self.t += 1
+        pos = self.extract_pos(obs)
 
         dead = False
-        if (reward <= 0 and done) or obs['location_stats']['ypos'] < 2:
+        if (reward <= 0 and done) or pos[1] < 2:
             reward -= 50
             dead = True
             done = True
 
-        if not dead:
-            dis = (obs['location_stats']['xpos'] ** 2 + obs['location_stats']['zpos'] ** 2 + obs['location_stats']['ypos'] ** 2) ** (1/2)
-        else:
-            dis = (obs['location_stats']['xpos'] ** 2 + obs['location_stats']['zpos'] ** 2) ** (1/2)
-        reward += dis
+        dis = np.linalg.norm(pos - self.destination)
+        reward -= dis
         reward -= 0.001 * self.t
 
         return (obs, reward, done, info)
@@ -97,3 +98,6 @@ class parkour_env(gym.Env):
             return
         else:
             return
+    
+    def extract_pos(self, obs) -> np.ndarray:
+        return np.array([obs['location_stats']['xpos'], obs['location_stats']['ypos'], obs['location_stats']['zpos']])
