@@ -7,16 +7,17 @@ from typing import Tuple, Dict, Any
 
 ACTION = Enum('Actions', ['forward', 'jump', 'sprint', 'camera_left', 'camera_right', 'camera_down', 'camera_up'])
 _ActionType = int
-_OperationType = map
+_ObservationType = map
 
 class parkour_env(gym.Env):
-    def __init__(self, resolution=(64, 64), map="bridge") -> None:
+    def __init__(self, resolution=(64, 64), map="bridge", debug=False) -> None:
         super().__init__()
         env_name = 'PKWB_%04d-v0' % (random.randint(0, 9999))
         abs_PK = PKWB(name=env_name, resolution=(64,64), map=map)
         abs_PK.register()
 
         self.map = map
+        self.debug = debug
         self.image_shape = resolution + (3,)
 
         self.env = gym.make(env_name)
@@ -27,7 +28,7 @@ class parkour_env(gym.Env):
         self.yaw = 0
         self.t = 0
 
-    def step(self, action: _ActionType) -> Tuple[_OperationType, float, bool, Dict[str, Any]]:
+    def step(self, action: _ActionType) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
         action_int = action + 1
         action_space = self.env.action_space.noop()
 
@@ -48,7 +49,16 @@ class parkour_env(gym.Env):
             action_space['camera'][0] = 30 - self.yaw
             self.yaw = 30
 
-        obs, reward, done, info = self.env.step(action_space)
+        if not self.debug:
+            obs, reward, done, info = self.env.step(action_space)
+        else:
+            obs = self.env.observation_space.sample()
+            obs['location_stats']['ypos'] = 2
+            obs['location_stats']['xpos'] = random.random() * 5
+            obs['location_stats']['zpos'] = random.random() * 5
+            reward = 0
+            done = False
+            info = {}
         self.t += 1
 
         dead = False
@@ -62,17 +72,27 @@ class parkour_env(gym.Env):
         else:
             dis = (obs['location_stats']['xpos'] ** 2 + obs['location_stats']['zpos'] ** 2) ** (1/2)
         reward += dis
-        reward -= 0.01 * self.t
+        reward -= 0.001 * self.t
 
         return (obs, reward, done, info)
 
-    def reset(self) -> Any:
+    def reset(self) -> _ObservationType:
         self.yaw = 0
         self.t = 0
-        return self.env.reset()
+        if not self.debug:
+            return self.env.reset()
+        else:
+            return self.env.observation_space.sample()
 
     def render(self, mode='human') -> Any:
-        return self.env.render(mode)
+        if not self.debug:
+            return self.env.render(mode)
+        else:
+            return
 
     def close(self) -> None:
-        self.env.close()
+        if not self.debug:
+            self.env.close()
+            return
+        else:
+            return
