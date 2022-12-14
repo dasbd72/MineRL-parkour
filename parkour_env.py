@@ -51,7 +51,7 @@ class parkour_env(gym.Env):
             action_space['forward'] = 1
             action_space['sprint'] = 1
         elif action_int == ACTION.camera_left.value:
-            action_space['camera'][1] = 10
+            action_space['camera'][1] = -10
         elif action_int == ACTION.camera_right.value:
             action_space['camera'][1] = 10
         elif action_int == ACTION.camera_down.value:
