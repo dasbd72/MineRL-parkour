@@ -15,7 +15,8 @@ PKWB_MAP = {
     "bridge_lift": (0, 3, 7), 
     "bridge_hole": (0, 1, 9), 
     "bridge_turn_left_hole": (4, 1, 10), 
-    "bridge_turn_right_hole": (-4, 1, 10)
+    "bridge_turn_right_hole": (-4, 1, 10),
+    "bridge_hybrid": (0, 3, 16)
 }
 
 class PKWB(SimpleEmbodimentEnvSpec):
@@ -84,6 +85,19 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="0" y1="1" z1="4" x2="0" y2="1" z2="5" type="obsidian"/>
                     <DrawCuboid x1="0" y1="1" z1="5" x2="-4" y2="1" z2="5" type="obsidian"/>
                     <DrawCuboid x1="-4" y1="1" z1="5" x2="-4" y2="1" z2="8" type="obsidian"/>
+                """)
+            ], "bridge_hybrid": [
+                handlers.DrawingDecorator("""
+                    <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="3" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="5" x2="0" y2="1" z2="6" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="6" x2="5" y2="1" z2="6" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="1" z1="6" x2="5" y2="1" z2="7" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="1" z1="9" x2="5" y2="1" z2="10" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="2" z1="10" x2="5" y2="2" z2="11" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="3" z1="11" x2="5" y2="3" z2="13" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="3" z1="13" x2="0" y2="3" z2="13" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="3" z1="13" x2="0" y2="3" z2="14" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="3" z1="16" x2="0" y2="3" z2="16" type="gold_block"/>
                 """)
             ]
         }

@@ -92,7 +92,7 @@ class parkour_env(gym.Env):
         if pos[1] < 2:
             done = True
             if self.fast:
-                self.env.step({'chat': '/tp @a 0 2 0 0 0'})
+                self.teleport((0, 2, 0), (0, 0))
 
         return (obs, reward, done, info)
 
@@ -101,7 +101,7 @@ class parkour_env(gym.Env):
         self.t = 0
         if not self.debug:
             if self.env_alive and self.fast:
-                obs, _, _, _ = self.env.step({'chat': '/tp @a 0 2 0 0 0'})
+                obs, _, _, _ = self.teleport((0, 2, 0), (0, 0))
                 return obs
             else:
                 self.env_alive = True
@@ -124,3 +124,10 @@ class parkour_env(gym.Env):
     
     def extract_pos(self, obs) -> np.ndarray:
         return np.array([obs['location_stats']['xpos'], obs['location_stats']['ypos'], obs['location_stats']['zpos']])
+
+    def teleport(self, pos=(0, 2, 0), rot=(0,0)) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
+        if self.fast:
+            self.env.set_next_chat_message(f'/tp @a {pos[0]} {pos[1]} {pos[2]} {rot[0]} {rot[1]}')
+            self.env.step({})
+            self.env.step({})
+        return self.env.step({})
