@@ -62,8 +62,10 @@ class parkour_env(gym.Env):
             self.yaw = 30
 
         if not self.debug:
+            # One step forward
             obs, reward, done, info = self.env.step(action_space)
         else:
+            # Random step result
             obs = self.env.observation_space.sample()
             obs['location_stats']['ypos'] = 2
             obs['location_stats']['xpos'] = random.random() * 5
@@ -74,19 +76,23 @@ class parkour_env(gym.Env):
         self.t += 1
         pos = self.extract_pos(obs)
 
+        # Environment end
         if done:
             self.env_alive = False
 
-        if (reward <= 0 and done) or pos[1] < 2:
+        # Process reward value
+        if (reward < 0 and done) or pos[1] < 2:
             reward -= 50
 
-        dis = np.linalg.norm(pos - self.destination)
+        dis = np.linalg.norm(pos - self.destination) # Absolute distance to target
         reward -= dis
         reward -= 0.001 * self.t
         
+        # Dead condition
         if pos[1] < 2:
             done = True
-            self.env.step({'chat': '/tp @a 0 2 0 0 0'})
+            if self.fast:
+                self.env.step({'chat': '/tp @a 0 2 0 0 0'})
 
         return (obs, reward, done, info)
 
