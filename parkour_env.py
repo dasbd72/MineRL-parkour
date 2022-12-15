@@ -40,7 +40,7 @@ class parkour_env(gym.Env):
             'forward': 0,
             'jump': 0,
             'sprint': 0,
-            'camera': [0, 0]
+            'camera': np.array([0, 0])
         }
 
         if action_int == ACTION.forward.value:
