@@ -34,6 +34,9 @@ class parkour_env(gym.Env):
         self.yaw = 0
         self.t = 0
 
+        self.map_size = np.array([100, 100])
+        self.walked_block = np.zeros(self.map_size*2, dtype=bool)
+        self.walked_cnt = 0
     def step(self, action: _ActionType) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
         if not self.debug:
             action_int = action + 1
@@ -88,7 +91,13 @@ class parkour_env(gym.Env):
                     reward -= 100
 
             dis = np.linalg.norm(pos - self.destination) # Absolute distance to target
-            reward += np.linalg.norm(self.destination) - dis
+            x = int(pos[0]) + self.map_size[0]
+            z = int(pos[2]) + self.map_size[1]
+            if self.walked_block[x][z] == False:
+                self.walked_cnt += 1
+                self.walked_block[x][z] = True
+                
+            reward += (np.linalg.norm(self.destination) - dis + self.walked_cnt) / 2
             reward -= 0.01 * self.t
 
             return (obs, reward, done, info)
@@ -107,6 +116,8 @@ class parkour_env(gym.Env):
     def reset(self) -> _ObservationType:
         self.yaw = 0
         self.t = 0
+        self.walked_block = np.zeros(self.map_size*2, dtype=bool)
+        self.walked_cnt = 0
         if not self.debug:
             if self.env_alive and self.fast:
                 obs, _, _, _ = self.teleport((0, 2, 0), (0, 0))
