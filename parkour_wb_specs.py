@@ -16,7 +16,8 @@ PKWB_MAP = {
     "bridge_hole": (0, 1, 9), 
     "bridge_turn_left_hole": (4, 1, 10), 
     "bridge_turn_right_hole": (-4, 1, 10),
-    "bridge_hybrid": (0, 3, 16)
+    "bridge_hybrid": (0, 3, 16),
+    "bridge_debug": (0, 1, 1),
 }
 
 class PKWB(SimpleEmbodimentEnvSpec):
@@ -86,7 +87,8 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="0" y1="1" z1="5" x2="-4" y2="1" z2="5" type="obsidian"/>
                     <DrawCuboid x1="-4" y1="1" z1="5" x2="-4" y2="1" z2="8" type="obsidian"/>
                 """)
-            ], "bridge_hybrid": [
+            ], 
+            "bridge_hybrid": [
                 handlers.DrawingDecorator("""
                     <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="3" type="obsidian"/>
                     <DrawCuboid x1="0" y1="1" z1="5" x2="0" y2="1" z2="6" type="obsidian"/>
@@ -98,6 +100,12 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="5" y1="3" z1="13" x2="0" y2="3" z2="13" type="obsidian"/>
                     <DrawCuboid x1="0" y1="3" z1="13" x2="0" y2="3" z2="14" type="obsidian"/>
                     <DrawCuboid x1="0" y1="3" z1="16" x2="0" y2="3" z2="16" type="gold_block"/>
+                """)
+            ], 
+            "bridge_debug": [
+                handlers.DrawingDecorator("""
+                    <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="0" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="1" x2="0" y2="1" z2="1" type="gold_block"/>
                 """)
             ]
         }
@@ -123,19 +131,20 @@ class PKWB(SimpleEmbodimentEnvSpec):
         return [
             # reward the agent for touching a gold block (but only once)
             handlers.RewardForTouchingBlockType([
-                {'type':'gold_block', 'behaviour':'onceOnly', 'reward':'100'}
-            ]),
-            # also reward on mission end
-            handlers.RewardForMissionEnd(100)
+                {'type':'gold_block', 'behaviour':'constant', 'reward':'100'}
+            ])
         ]
 
     def create_agent_handlers(self) -> List[Handler]:
-        return [
-            # make the agent quit
-            handlers.AgentQuitFromTouchingBlockType([
-                'glass'
-            ])
-        ]
+        if self.manual_reset:
+            return []
+        else:
+            return [
+                # make the agent quit
+                handlers.AgentQuitFromTouchingBlockType([
+                    'gold_block'
+                ])
+            ]
 
     def create_actionables(self) -> List[Handler]:
         if self.manual_reset:

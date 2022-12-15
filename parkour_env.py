@@ -35,35 +35,64 @@ class parkour_env(gym.Env):
         self.t = 0
 
     def step(self, action: _ActionType) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
-        action_int = action + 1
-        action_space = {
-            'forward': 0,
-            'jump': 0,
-            'sprint': 0,
-            'camera': np.array([0, 0])
-        }
-
-        if action_int == ACTION.forward.value:
-            action_space['forward'] = 1
-        elif action_int == ACTION.jump.value:
-            action_space['jump'] = 1
-        elif action_int == ACTION.sprint.value:
-            action_space['forward'] = 1
-            action_space['sprint'] = 1
-        elif action_int == ACTION.camera_left.value:
-            action_space['camera'][1] = -10
-        elif action_int == ACTION.camera_right.value:
-            action_space['camera'][1] = 10
-        elif action_int == ACTION.camera_down.value:
-            action_space['camera'][0] = -30 - self.yaw
-            self.yaw = -30
-        elif action_int == ACTION.camera_up.value:
-            action_space['camera'][0] = 30 - self.yaw
-            self.yaw = 30
-
         if not self.debug:
+            action_int = action + 1
+            action_space = {
+                'forward': 0,
+                'jump': 0,
+                'sprint': 0,
+                'camera': np.array([0, 0])
+            }
+
+            if action_int == ACTION.forward.value:
+                action_space['forward'] = 1
+            elif action_int == ACTION.jump.value:
+                action_space['jump'] = 1
+            elif action_int == ACTION.sprint.value:
+                action_space['forward'] = 1
+                action_space['sprint'] = 1
+            elif action_int == ACTION.camera_left.value:
+                action_space['camera'][1] = -10
+            elif action_int == ACTION.camera_right.value:
+                action_space['camera'][1] = 10
+            elif action_int == ACTION.camera_down.value:
+                action_space['camera'][0] = -30 - self.yaw
+                self.yaw = -30
+            elif action_int == ACTION.camera_up.value:
+                action_space['camera'][0] = 30 - self.yaw
+                self.yaw = 30
+
             # One step forward
             obs, reward, done, info = self.env.step(action_space)
+            self.t += 1
+            pos = self.extract_pos(obs)
+
+            if self.fast:
+                if done:
+                    # Environment end
+                    self.env_alive = False
+                elif reward >= 100:
+                    done = True
+                elif pos[1] < 2:
+                    done = True
+                    reward -= 100
+
+                if done and self.env_alive and self.fast:
+                    self.teleport((0, 2, 0), (0, 0))
+            else:
+                # Environment end
+                if reward >= 100:
+                    done = True
+                if pos[1] < 2:
+                    done = True
+                    reward -= 100
+
+            dis = np.linalg.norm(pos - self.destination) # Absolute distance to target
+            reward += np.linalg.norm(self.destination) - dis
+            reward -= 0.01 * self.t
+
+            return (obs, reward, done, info)
+
         else:
             # Random step result
             obs = self.env.observation_space.sample()
@@ -73,28 +102,7 @@ class parkour_env(gym.Env):
             reward = 0
             done = np.random.choice(np.arange(0, 2), p=[0.99, 0.01])
             info = {}
-        self.t += 1
-        pos = self.extract_pos(obs)
-
-        # Environment end
-        if done:
-            self.env_alive = False
-
-        # Process reward value
-        if (reward < 0 and done) or pos[1] < 2:
-            reward -= 50
-
-        dis = np.linalg.norm(pos - self.destination) # Absolute distance to target
-        reward -= dis
-        reward -= 0.001 * self.t
-        
-        # Dead condition
-        if pos[1] < 2:
-            done = True
-            if self.fast:
-                self.teleport((0, 2, 0), (0, 0))
-
-        return (obs, reward, done, info)
+            return (obs, reward, done, info)
 
     def reset(self) -> _ObservationType:
         self.yaw = 0
@@ -104,7 +112,9 @@ class parkour_env(gym.Env):
                 obs, _, _, _ = self.teleport((0, 2, 0), (0, 0))
                 return obs
             else:
-                self.env_alive = True
+                if self.fast:
+                    self.env_alive = True
+                print('Resetting environment.')
                 return self.env.reset()
         else:
             return self.env.observation_space.sample()
@@ -126,8 +136,10 @@ class parkour_env(gym.Env):
         return np.array([obs['location_stats']['xpos'], obs['location_stats']['ypos'], obs['location_stats']['zpos']])
 
     def teleport(self, pos=(0, 2, 0), rot=(0,0)) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
-        if self.fast:
-            self.env.set_next_chat_message(f'/tp @a {pos[0]} {pos[1]} {pos[2]} {rot[0]} {rot[1]}')
-            self.env.step({})
-            self.env.step({})
-        return self.env.step({})
+        if not self.debug:
+            if self.fast:
+                self.env.set_next_chat_message(f'/tp @a {pos[0]} {pos[1]} {pos[2]} {rot[0]} {rot[1]}')
+                self.env.step({})
+                self.env.step({})
+            return self.env.step({})
+        return self.env.observation_space.sample()
