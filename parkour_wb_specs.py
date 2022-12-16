@@ -156,7 +156,8 @@ class PKWB(SimpleEmbodimentEnvSpec):
 
     def create_observables(self) -> List[Handler]:
         return super().create_observables() + [
-            handlers.ObservationFromCurrentLocation()
+            handlers.ObservationFromCurrentLocation(),
+            handlers.CompassObservation(angle=True, distance=False)
         ]
 
     def create_server_initial_conditions(self) -> List[Handler]:
