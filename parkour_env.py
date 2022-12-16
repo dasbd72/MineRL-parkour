@@ -6,12 +6,17 @@ import random
 from typing import Tuple, Dict, Any
 import numpy as np
 
-ACTION = Enum('Actions', ['forward', 'jump', 'sprint', 'camera_left', 'camera_right', 'camera_down', 'camera_up'])
+ACTION = [
+    Enum('Actions', ['forward', 'camera_left', 'camera_right']),
+    Enum('Actions', ['forward', 'jump', 'camera_left', 'camera_right']),
+    Enum('Actions', ['forward', 'jump', 'camera_left', 'camera_right', 'camera_down', 'camera_up']),
+    Enum('Actions', ['forward', 'jump', 'sprint', 'camera_left', 'camera_right', 'camera_down', 'camera_up']),
+]
 _ActionType = int
 _ObservationType = map
 
 class parkour_env(gym.Env):
-    def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False) -> None:
+    def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3) -> None:
         super().__init__()
         if map in PKWB_MAP.keys():
             self.map = map
@@ -20,13 +25,14 @@ class parkour_env(gym.Env):
         self.debug = debug
         self.image_shape = resolution + (3,)
         self.fast = fast
+        self.action_set = action_set
 
         env_name = 'PKWB_%04d-v0' % (random.randint(0, 9999))
         abs_PK = PKWB(name=env_name, resolution=resolution, map=self.map, manual_reset=self.fast)
         abs_PK.register()
         self.env = gym.make(env_name)
         self.env_alive = False
-        self.n_actions = len(ACTION)
+        self.n_actions = len(ACTION[self.action_set])
         self.action_space = spaces.Discrete(self.n_actions)
         self.observation_space = self.env.observation_space
         self.destination = np.array(PKWB_MAP[self.map])
@@ -40,6 +46,7 @@ class parkour_env(gym.Env):
     def step(self, action: _ActionType) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
         if not self.debug:
             action_int = action + 1
+            action_str = ACTION[self.action_set](action_int).name
             action_space = {
                 'forward': 0,
                 'jump': 0,
@@ -47,23 +54,23 @@ class parkour_env(gym.Env):
                 'camera': np.array([0, 0])
             }
 
-            if action_int == ACTION.forward.value:
-                action_space['forward'] = 1
-            elif action_int == ACTION.jump.value:
-                action_space['jump'] = 1
-            elif action_int == ACTION.sprint.value:
-                action_space['forward'] = 1
-                action_space['sprint'] = 1
-            elif action_int == ACTION.camera_left.value:
+            print(action_str)
+            if action_str == 'camera_left':
                 action_space['camera'][1] = -10
-            elif action_int == ACTION.camera_right.value:
+            elif action_str == 'camera_right':
                 action_space['camera'][1] = 10
-            elif action_int == ACTION.camera_down.value:
+            elif action_str == 'camera_down':
                 action_space['camera'][0] = -30 - self.yaw
                 self.yaw = -30
-            elif action_int == ACTION.camera_up.value:
+            elif action_str == 'camera_up':
                 action_space['camera'][0] = 30 - self.yaw
                 self.yaw = 30
+            elif action_str == 'sprint':
+                action_space['forward'] = 1
+                action_space['sprint'] = 1
+            else:
+                # forward or jump
+                action_space[action_str] = 1
 
             # One step forward
             obs, reward, done, info = self.env.step(action_space)
