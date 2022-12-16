@@ -54,7 +54,6 @@ class parkour_env(gym.Env):
                 'camera': np.array([0, 0])
             }
 
-            print(action_str)
             if action_str == 'camera_left':
                 action_space['camera'][1] = -10
             elif action_str == 'camera_right':
