@@ -7,10 +7,18 @@ from typing import Tuple, Dict, Any
 import numpy as np
 
 ACTION = [
+    # action_set = 0
     Enum('Actions', ['forward', 'camera_left', 'camera_right']),
+    # action_set = 1
     Enum('Actions', ['forward', 'jump', 'camera_left', 'camera_right']),
+    # action_set = 2
     Enum('Actions', ['forward', 'jump', 'camera_left', 'camera_right', 'camera_down', 'camera_up']),
-    Enum('Actions', ['forward', 'jump', 'sprint', 'camera_left', 'camera_right', 'camera_down', 'camera_up']),
+    # action_set = 3
+    Enum('Actions', ['forward', 'jump', 'forward_sprint', 'camera_left', 'camera_right', 'camera_down', 'camera_up']),
+    # action_set = 4
+    Enum('Actions', ['forward', 'forward_jump', 'forward_sprint', 'camera_left', 'camera_right']),
+    # action_set = 5
+    Enum('Actions', ['forward', 'forward_jump', 'forward_sprint', 'camera_left', 'camera_right', 'camera_down', 'camera_up']),
 ]
 _ActionType = int
 _ObservationType = map
@@ -18,7 +26,7 @@ _ObservationType = map
 class parkour_env(gym.Env):
     def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3, isYawDelta=False) -> None:
         super().__init__()
-        self.version = '0.2.5'
+        self.version = '0.2.6'
 
         if map in PKWB_MAP.keys():
             self.map = map
@@ -46,6 +54,7 @@ class parkour_env(gym.Env):
         self.map_size = np.array([100, 100])
         self.walked_block = np.zeros(self.map_size*2, dtype=bool)
         self.walked_cnt = 0
+
     def step(self, action: _ActionType) -> Tuple[_ObservationType, float, bool, Dict[str, Any]]:
         if not self.debug:
             action_int = action + 1
@@ -75,11 +84,14 @@ class parkour_env(gym.Env):
                 else:
                     action_space['camera'][0] = 30 - self.yaw
                     self.yaw = 30
-            elif action_str == 'sprint':
+            elif action_str == 'forward_sprint':
                 action_space['forward'] = 1
                 action_space['sprint'] = 1
+            elif action_str == 'forward_jump':
+                action_space['forward'] = 1
+                action_space['jump'] = 1
             else:
-                # forward or jump
+                # forward, jump or sprint
                 action_space[action_str] = 1
 
             # One step forward
@@ -113,8 +125,9 @@ class parkour_env(gym.Env):
             if self.walked_block[x][z] == False:
                 self.walked_cnt += 1
                 self.walked_block[x][z] = True
+                reward += np.linalg.norm(self.destination) - dis
                 
-            reward += (np.linalg.norm(self.destination) - dis + self.walked_cnt) / 2
+            # reward += (np.linalg.norm(self.destination) - dis + self.walked_cnt) / 2
             reward -= 0.01 * self.t
 
             return (obs, reward, done, info)
