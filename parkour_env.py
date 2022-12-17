@@ -16,7 +16,7 @@ _ActionType = int
 _ObservationType = map
 
 class parkour_env(gym.Env):
-    def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3) -> None:
+    def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3, isYawDelta=False) -> None:
         super().__init__()
         if map in PKWB_MAP.keys():
             self.map = map
@@ -26,6 +26,7 @@ class parkour_env(gym.Env):
         self.image_shape = resolution + (3,)
         self.fast = fast
         self.action_set = action_set
+        self.isYawDelta = isYawDelta
 
         env_name = 'PKWB_%04d-v0' % (random.randint(0, 9999))
         abs_PK = PKWB(name=env_name, resolution=resolution, map=self.map, manual_reset=self.fast)
@@ -59,11 +60,19 @@ class parkour_env(gym.Env):
             elif action_str == 'camera_right':
                 action_space['camera'][1] = 10
             elif action_str == 'camera_down':
-                action_space['camera'][0] = -30 - self.yaw
-                self.yaw = -30
+                if self.isYawDelta:
+                    action_space['camera'][0] = -10
+                    self.yaw = max(-90, self.yaw - 10)
+                else:
+                    action_space['camera'][0] = -30 - self.yaw
+                    self.yaw = -30
             elif action_str == 'camera_up':
-                action_space['camera'][0] = 30 - self.yaw
-                self.yaw = 30
+                if self.isYawDelta:
+                    action_space['camera'][0] = 10
+                    self.yaw = min(90, self.yaw + 10)
+                else:
+                    action_space['camera'][0] = 30 - self.yaw
+                    self.yaw = 30
             elif action_str == 'sprint':
                 action_space['forward'] = 1
                 action_space['sprint'] = 1
