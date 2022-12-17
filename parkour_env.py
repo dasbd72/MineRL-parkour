@@ -18,6 +18,8 @@ _ObservationType = map
 class parkour_env(gym.Env):
     def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3, isYawDelta=False) -> None:
         super().__init__()
+        self.version = '0.2.4'
+
         if map in PKWB_MAP.keys():
             self.map = map
         else:
