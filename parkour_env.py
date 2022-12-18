@@ -27,7 +27,7 @@ _ObservationType = map
 class parkour_env(gym.Env):
     def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3, isYawDelta=False) -> None:
         super().__init__()
-        self.version = '0.2.7'
+        self.version = '0.2.8'
 
         if map in PKWB_MAP.keys():
             self.map = map
@@ -99,13 +99,15 @@ class parkour_env(gym.Env):
             obs, reward, done, info = self.env.step(action_space)
             self.t += 1
             pos = self.extract_pos(obs)
-
+            
+            success = False
             if self.fast:
                 if done:
                     # Environment end
                     self.env_alive = False
                 elif reward >= 100:
                     done = True
+                    success = True
                 elif pos[1] < 2:
                     done = True
                     reward -= 100
@@ -116,6 +118,7 @@ class parkour_env(gym.Env):
                 # Environment end
                 if reward >= 100:
                     done = True
+                    success = True
                 if pos[1] < 2:
                     done = True
                     reward -= 100
@@ -131,7 +134,7 @@ class parkour_env(gym.Env):
             # reward += (np.linalg.norm(self.destination) - dis + self.walked_cnt) / 2
             reward -= 0.01 * self.t
 
-            return (obs, reward, done, info)
+            return (obs, reward, done, info, success)
 
         else:
             # Random step result
