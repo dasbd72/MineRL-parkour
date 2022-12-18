@@ -20,7 +20,7 @@
 
 ### Minerl
 * pip install git+https://github.com/minerllabs/minerl@v0.4
-* pip install pyglet==1.5.27 --user
+* pip install pyglet==1.5.27
 * pip install numpy --force-reinstall
 
 #### 1.0.0

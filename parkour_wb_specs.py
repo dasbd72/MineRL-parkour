@@ -10,18 +10,20 @@ In PKWB, player parkours.
 PKWB_LENGTH = 1000000
 PKWB_MAP = {
     "bridge": (0, 1, 5),
-    "bridge_turn_left": (4, 1, 9), 
-    "bridge_turn_right": (-4, 1, 9), 
-    "bridge_lift": (0, 3, 7), 
-    "bridge_hole": (0, 1, 9), 
-    "bridge_turn_left_hole": (4, 1, 10), 
+    "bridge_turn_left": (4, 1, 9),
+    "bridge_turn_right": (-4, 1, 9),
+    "bridge_lift": (0, 3, 7),
+    "bridge_hole": (0, 1, 9),
+    "bridge_turn_left_hole": (4, 1, 10),
     "bridge_turn_right_hole": (-4, 1, 10),
     "bridge_hybrid": (0, 3, 16),
+    "bridge_hybrid2": (-2, 3, 16),
     "bridge_debug": (0, 1, 1),
 }
 
+
 class PKWB(SimpleEmbodimentEnvSpec):
-    def __init__(self, resolution=(64,64), map="bridge", manual_reset=False, *args, **kwargs):
+    def __init__(self, resolution=(64, 64), map="bridge", manual_reset=False, *args, **kwargs):
         """
         map types
         bridge: a bridge
@@ -29,7 +31,7 @@ class PKWB(SimpleEmbodimentEnvSpec):
         """
         if 'name' not in kwargs:
             kwargs['name'] = 'PKWB-v0'
-        
+
         self.manual_reset = manual_reset
         self.map = map
         self.maps = {
@@ -38,7 +40,7 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="4" type="obsidian"/>
                     <DrawCuboid x1="0" y1="1" z1="5" x2="0" y2="1" z2="5" type="gold_block"/>
                 """)
-            ], 
+            ],
             "bridge_turn_left": [
                 handlers.DrawingDecorator("""
                     <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="4" type="obsidian"/>
@@ -62,7 +64,7 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="0" y1="3" z1="5" x2="0" y2="3" z2="6" type="obsidian"/>
                     <DrawCuboid x1="0" y1="3" z1="7" x2="0" y2="3" z2="7" type="gold_block"/>
                 """)
-            ], 
+            ],
             "bridge_hole": [
                 handlers.DrawingDecorator("""
                     <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="3" type="obsidian"/>
@@ -87,7 +89,7 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="0" y1="1" z1="5" x2="-4" y2="1" z2="5" type="obsidian"/>
                     <DrawCuboid x1="-4" y1="1" z1="5" x2="-4" y2="1" z2="8" type="obsidian"/>
                 """)
-            ], 
+            ],
             "bridge_hybrid": [
                 handlers.DrawingDecorator("""
                     <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="3" type="obsidian"/>
@@ -101,20 +103,36 @@ class PKWB(SimpleEmbodimentEnvSpec):
                     <DrawCuboid x1="0" y1="3" z1="13" x2="0" y2="3" z2="14" type="obsidian"/>
                     <DrawCuboid x1="0" y1="3" z1="16" x2="0" y2="3" z2="16" type="gold_block"/>
                 """)
-            ], 
+            ], "bridge_hybrid2": [
+                handlers.DrawingDecorator("""
+                    <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="3" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="5" x2="0" y2="1" z2="6" type="obsidian"/>
+                    <DrawCuboid x1="0" y1="1" z1="6" x2="5" y2="1" z2="6" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="1" z1="6" x2="5" y2="1" z2="7" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="1" z1="9" x2="5" y2="1" z2="10" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="2" z1="10" x2="5" y2="2" z2="11" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="3" z1="11" x2="5" y2="3" z2="13" type="obsidian"/>
+                    <DrawCuboid x1="5" y1="3" z1="13" x2="2" y2="3" z2="13" type="obsidian"/>
+                    <DrawCuboid x1="2" y1="3" z1="13" x2="2" y2="3" z2="10" type="obsidian"/>
+                    <DrawCuboid x1="2" y1="3" z1="10" x2="1" y2="3" z2="10" type="obsidian"/>
+                    <DrawCuboid x1="-1" y1="3" z1="10" x2="-1" y2="3" z2="13" type="obsidian"/>
+                    <DrawCuboid x1="-2" y1="3" z1="13" x2="-2" y2="3" z2="15" type="obsidian"/>
+                    <DrawCuboid x1="-2" y1="3" z1="16" x2="-2" y2="3" z2="16" type="gold_block"/>
+                """)
+            ],
             "bridge_debug": [
                 handlers.DrawingDecorator("""
                     <DrawCuboid x1="0" y1="1" z1="0" x2="0" y2="1" z2="0" type="obsidian"/>
                     <DrawCuboid x1="0" y1="1" z1="1" x2="0" y2="1" z2="1" type="gold_block"/>
                 """)
-            ]
+            ],
         }
 
         super().__init__(*args,
-                    max_episode_steps=PKWB_LENGTH,
-                    reward_threshold=100.0, 
-                    resolution=resolution,
-                    **kwargs)
+                         max_episode_steps=PKWB_LENGTH,
+                         reward_threshold=100.0,
+                         resolution=resolution,
+                         **kwargs)
 
     def create_server_world_generators(self) -> List[Handler]:
         if self.manual_reset:
@@ -131,7 +149,7 @@ class PKWB(SimpleEmbodimentEnvSpec):
         return [
             # reward the agent for touching a gold block (but only once)
             handlers.RewardForTouchingBlockType([
-                {'type':'gold_block', 'behaviour':'constant', 'reward':'100'}
+                {'type': 'gold_block', 'behaviour': 'constant', 'reward': '100'}
             ])
         ]
 
