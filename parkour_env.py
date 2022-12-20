@@ -66,6 +66,7 @@ def parse_map(mapstr: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     return (destination, grid, offset)
 
+
 def generateCMD(mapstr: str) -> str:
     tree = ET.fromstring("<Data>" + mapstr + "</Data>")
     x1s, x2s, y1s, y2s, z1s, z2s, types = [], [], [], [], [], [], []
@@ -81,6 +82,7 @@ def generateCMD(mapstr: str) -> str:
         z1s.append(int(ele.get('z1')))
         z2s.append(int(ele.get('z2')))
         types.append(ele.get('type'))
+
     def commandBlocks(cmd):
         cnt = len(cmd)
         cmd.append(f"fill ~ ~-{cnt} ~ ~ ~ ~ air")
@@ -94,11 +96,10 @@ def generateCMD(mapstr: str) -> str:
     return commandBlocks(cmd)
 
 
-
 class parkour_env(gym.Env):
     def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3, isYawDelta=False) -> None:
         super().__init__()
-        self.version = '0.3.1'
+        self.version = '0.3.2'
 
         if map in PKWB_MAP.keys():
             self.map = map
@@ -217,13 +218,14 @@ class parkour_env(gym.Env):
         self.walked_cnt = 0
         if not self.debug:
             if self.env_alive and self.fast:
-                obs, _, _, _ = self.teleport((0, 2, 0), (0, 0))
-                return obs
+                obs, _, _, _, _ = self.teleport((0, 2, 0), (0, 0))
             else:
-                if self.fast:
-                    self.env_alive = True
                 print('Resetting environment.')
-                return self.env.reset()
+                obs = self.env.reset()
+            if self.fast:
+                self.env_alive = True
+                self.env.step({'chat': '/gamerule doWeatherCycle false'})
+            return obs
         else:
             return self.env.observation_space.sample()
 
@@ -246,10 +248,9 @@ class parkour_env(gym.Env):
     def teleport(self, pos=(0, 2, 0), rot=(0, 0)) -> Tuple[_ObservationType, float, bool, Dict[str, Any], bool]:
         if not self.debug:
             if self.fast:
-                self.env.set_next_chat_message(f'/tp @a {pos[0]} {pos[1]} {pos[2]} {rot[0]} {rot[1]}')
+                self.env.step({'chat': f'/tp @a {pos[0]} {pos[1]} {pos[2]} {rot[0]} {rot[1]}'})
                 self.env.step({})
-                self.env.step({})
-            return self.env.step({})
+            return self.env.step({}) + (False, )
         return self.random_step()
 
     def random_step(self) -> Tuple[_ObservationType, float, bool, Dict[str, Any], bool]:
