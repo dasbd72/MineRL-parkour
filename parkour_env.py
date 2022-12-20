@@ -66,11 +66,39 @@ def parse_map(mapstr: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     return (destination, grid, offset)
 
+def generateCMD(mapstr: str) -> str:
+    tree = ET.fromstring("<Data>" + mapstr + "</Data>")
+    x1s, x2s, y1s, y2s, z1s, z2s, types = [], [], [], [], [], [], []
+    cmd = []
+    cmd.append("/fill -10 0 0 20 5 20 air")
+    cmd.append("/time set day")
+    for ele in tree:
+        cmd.append(f"/fill {ele.get('x1')} {ele.get('y1')} {ele.get('z1')} {ele.get('x2')} {ele.get('y2')} {ele.get('z2')} {ele.get('type')}")
+        x1s.append(int(ele.get('x1')))
+        x2s.append(int(ele.get('x2')))
+        y1s.append(int(ele.get('y1')))
+        y2s.append(int(ele.get('y2')))
+        z1s.append(int(ele.get('z1')))
+        z2s.append(int(ele.get('z2')))
+        types.append(ele.get('type'))
+    def commandBlocks(cmd):
+        cnt = len(cmd)
+        cmd.append(f"fill ~ ~-{cnt} ~ ~ ~ ~ air")
+        string = "summon falling_block ~ ~2 ~ {"
+        for idx, c in enumerate(cmd):
+            string += "Time:1,BlockState:{Name:\"command_block\"},TileEntityData:{auto:1,Command:\"" + c + "\"}"
+            if idx < cnt:
+                string += ",Passengers:[{id:\"armor_stand\",Health:0,Passengers:[{id:\"falling_block\","
+        string += "}]" * cnt * 2 + "}"
+        return string
+    return commandBlocks(cmd)
+
+
 
 class parkour_env(gym.Env):
     def __init__(self, resolution=(64, 64), map="bridge", debug=False, fast=False, action_set=3, isYawDelta=False) -> None:
         super().__init__()
-        self.version = '0.3.0'
+        self.version = '0.3.1'
 
         if map in PKWB_MAP.keys():
             self.map = map
